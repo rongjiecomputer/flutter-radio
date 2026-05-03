@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:just_audio/just_audio.dart';
+import 'package:media_kit/media_kit.dart';
 import '../services/api_service.dart';
 import '../models/now_playing_info.dart';
 
@@ -13,7 +13,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  final Player _audioPlayer = Player();
   final ApiService _apiService = ApiService();
 
   List<NowPlayingInfo> _nowPlayingList = [];
@@ -33,17 +33,21 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _initAudioPlayer() {
-    _audioPlayer.playerStateStream.listen((state) {
+    _audioPlayer.stream.playing.listen((playing) {
       if (mounted) {
         setState(() {
-          _isPlaying = state.playing;
-          if (state.processingState == ProcessingState.completed) {
-            _isPlaying = false;
-          }
+          _isPlaying = playing;
         });
       }
     });
-    _audioPlayer.setVolume(_volume);
+    _audioPlayer.stream.completed.listen((completed) {
+      if (mounted && completed) {
+        setState(() {
+          _isPlaying = false;
+        });
+      }
+    });
+    _audioPlayer.setVolume(_volume * 100.0);
   }
 
   Future<void> _fetchNowPlaying() async {
@@ -68,8 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final streamUrl = await _apiService.fetchStreamUrl();
       if (streamUrl != null) {
         try {
-          await _audioPlayer.setUrl(streamUrl);
-          await _audioPlayer.play();
+          await _audioPlayer.open(Media(streamUrl));
         } catch (e) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -94,7 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _volume = value;
     });
-    _audioPlayer.setVolume(_volume);
+    _audioPlayer.setVolume(_volume * 100.0);
   }
 
   @override
