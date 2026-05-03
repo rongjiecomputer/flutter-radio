@@ -126,9 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
-          Expanded(
-            child: _buildNowPlayingList(),
-          ),
+          Expanded(child: _buildNowPlayingList()),
         ],
       ),
     );
@@ -158,7 +156,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     : IconButton(
                         iconSize: 64,
                         color: Colors.blueAccent,
-                        icon: Icon(_isPlaying ? Icons.stop_circle : Icons.play_circle_fill),
+                        icon: Icon(
+                          _isPlaying
+                              ? Icons.stop_circle
+                              : Icons.play_circle_fill,
+                        ),
                         onPressed: _togglePlay,
                       ),
               ],
@@ -168,14 +170,11 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 const Icon(Icons.volume_down),
                 Expanded(
-                  child: Slider(
-                    value: _volume,
-                    onChanged: _onVolumeChanged,
-                  ),
+                  child: Slider(value: _volume, onChanged: _onVolumeChanged),
                 ),
                 const Icon(Icons.volume_up),
               ],
-            )
+            ),
           ],
         ),
       ),
@@ -192,14 +191,18 @@ class _HomeScreenState extends State<HomeScreen> {
       itemBuilder: (context, index) {
         final info = _nowPlayingList[index];
         final timeStr = _formatTime(info.startTime);
-        
+
         return ListTile(
           leading: Text(
             timeStr,
             style: const TextStyle(fontWeight: FontWeight.w500),
           ),
           title: Text(info.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-          subtitle: Text(info.artist, maxLines: 1, overflow: TextOverflow.ellipsis),
+          subtitle: Text(
+            info.artist,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
           trailing: IconButton(
             icon: const Icon(Icons.copy),
             onPressed: () async {
