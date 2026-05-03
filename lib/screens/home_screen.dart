@@ -193,15 +193,31 @@ class _HomeScreenState extends State<HomeScreen> {
             style: const TextStyle(fontWeight: FontWeight.w500),
           ),
           title: Text(info.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-          subtitle: Text(
-            info.artist,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (info.trackAlbumPublisher.isNotEmpty)
+                Text(
+                  info.trackAlbumPublisher,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              Text(
+                info.artist,
+                maxLines: 1,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.grey[600],
+                  fontStyle: FontStyle.italic,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
           trailing: IconButton(
             icon: const Icon(Icons.copy),
             onPressed: () async {
-              final textToCopy = '${info.title} by ${info.artist} ($timeStr)';
+              final textToCopy =
+                  '${info.title} from ${info.trackAlbumPublisher}, ${info.artist}';
               await Clipboard.setData(ClipboardData(text: textToCopy));
               if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
