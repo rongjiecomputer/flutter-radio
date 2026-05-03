@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:media_kit/media_kit.dart';
+
 import '../services/api_service.dart';
 import '../models/now_playing_info.dart';
 
@@ -13,7 +13,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final Player _audioPlayer = Player();
+  static const _audioChannel = MethodChannel('com.example.radio/player');
   final ApiService _apiService = ApiService();
 
   List<NowPlayingInfo> _nowPlayingList = [];
@@ -33,21 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _initAudioPlayer() {
-    _audioPlayer.stream.playing.listen((playing) {
-      if (mounted) {
-        setState(() {
-          _isPlaying = playing;
-        });
-      }
-    });
-    _audioPlayer.stream.completed.listen((completed) {
-      if (mounted && completed) {
-        setState(() {
-          _isPlaying = false;
-        });
-      }
-    });
-    _audioPlayer.setVolume(_volume * 100.0);
+    _audioChannel.invokeMethod('setVolume', _volume);
   }
 
   Future<void> _fetchNowPlaying() async {
@@ -61,7 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _togglePlay() async {
     if (_isPlaying) {
-      await _audioPlayer.stop();
+      await _audioChannel.invokeMethod('stop');
       setState(() {
         _isPlaying = false;
       });
@@ -72,7 +58,13 @@ class _HomeScreenState extends State<HomeScreen> {
       final streamUrl = await _apiService.fetchStreamUrl();
       if (streamUrl != null) {
         try {
-          await _audioPlayer.open(Media(streamUrl));
+          await _audioChannel.invokeMethod('setUrl', streamUrl);
+          await _audioChannel.invokeMethod('play');
+          if (mounted) {
+            setState(() {
+              _isPlaying = true;
+            });
+          }
         } catch (e) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -97,13 +89,13 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _volume = value;
     });
-    _audioPlayer.setVolume(_volume * 100.0);
+    _audioChannel.invokeMethod('setVolume', _volume);
   }
 
   @override
   void dispose() {
     _timer?.cancel();
-    _audioPlayer.dispose();
+    _audioChannel.invokeMethod('stop');
     super.dispose();
   }
 
