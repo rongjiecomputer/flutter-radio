@@ -32,7 +32,7 @@ class FlutterWindow : public Win32Window {
   std::unique_ptr<flutter::FlutterViewController> flutter_controller_;
 
   // Native radio player
-  std::unique_ptr<RadioPlayer> radio_player_;
+  std::unique_ptr<flutter_radio::RadioPlayer> radio_player_;
 };
 
 #endif  // RUNNER_FLUTTER_WINDOW_H_

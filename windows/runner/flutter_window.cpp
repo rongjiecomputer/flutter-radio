@@ -30,7 +30,7 @@ bool FlutterWindow::OnCreate() {
   });
 
   // Initialize RadioPlayer
-  radio_player_ = std::make_unique<RadioPlayer>();
+  radio_player_ = std::make_unique<flutter_radio::RadioPlayer>();
 
   // Set up MethodChannel
   flutter::MethodChannel<> channel(
@@ -55,10 +55,7 @@ bool FlutterWindow::OnCreate() {
           }
         } else if (call.method_name() == "setUrl") {
           if (auto* url = std::get_if<std::string>(call.arguments())) {
-            int size_needed = MultiByteToWideChar(CP_UTF8, 0, url->c_str(), (int)url->size(), NULL, 0);
-            std::wstring wurl(size_needed, 0);
-            MultiByteToWideChar(CP_UTF8, 0, url->c_str(), (int)url->size(), &wurl[0], size_needed);
-            radio_player_->SetUrl(wurl);
+            radio_player_->SetUrl(*url);
             result->Success();
           } else {
             result->Error("INVALID_ARGUMENT", "URL must be a string");
