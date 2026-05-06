@@ -7,9 +7,15 @@
 
 #include "flutter/generated_plugin_registrant.h"
 
+#include <memory>
+#include "radio_player.h"
+
+
 struct _MyApplication {
   GtkApplication parent_instance;
   char** dart_entrypoint_arguments;
+  std::unique_ptr<flutter_radio::RadioPlayer> radio_player;
+  FlMethodChannel* channel;
 };
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
@@ -75,6 +81,55 @@ static void my_application_activate(GApplication* application) {
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
 
+  // Initialize RadioPlayer
+  self->radio_player = std::make_unique<flutter_radio::RadioPlayer>();
+
+  // Set up MethodChannel
+  FlBinaryMessenger* messenger =
+      fl_engine_get_binary_messenger(fl_view_get_engine(view));
+  g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
+  self->channel = fl_method_channel_new(messenger, "com.example.radio/player",
+                                        FL_METHOD_CODEC(codec));
+
+  fl_method_channel_set_method_call_handler(
+      self->channel,
+      [](FlMethodChannel* channel, FlMethodCall* method_call,
+         gpointer user_data) {
+        MyApplication* self = MY_APPLICATION(user_data);
+        const gchar* method = fl_method_call_get_name(method_call);
+        FlValue* args = fl_method_call_get_args(method_call);
+
+        if (strcmp(method, "play") == 0) {
+          self->radio_player->Play();
+          fl_method_call_respond_success(method_call, nullptr, nullptr);
+        } else if (strcmp(method, "stop") == 0) {
+          self->radio_player->Stop();
+          fl_method_call_respond_success(method_call, nullptr, nullptr);
+        } else if (strcmp(method, "setVolume") == 0) {
+          if (fl_value_get_type(args) == FL_VALUE_TYPE_FLOAT64) {
+            self->radio_player->SetVolume(
+                static_cast<float>(fl_value_get_float64(args)));
+            fl_method_call_respond_success(method_call, nullptr, nullptr);
+          } else {
+            fl_method_call_respond_error(method_call, "INVALID_ARGUMENT",
+                                         "Volume must be a double", nullptr,
+                                         nullptr);
+          }
+        } else if (strcmp(method, "setUrl") == 0) {
+          if (fl_value_get_type(args) == FL_VALUE_TYPE_STRING) {
+            self->radio_player->SetUrl(fl_value_get_string(args));
+            fl_method_call_respond_success(method_call, nullptr, nullptr);
+          } else {
+            fl_method_call_respond_error(method_call, "INVALID_ARGUMENT",
+                                         "URL must be a string", nullptr,
+                                         nullptr);
+          }
+        } else {
+          fl_method_call_respond_not_implemented(method_call, nullptr);
+        }
+      },
+      self, nullptr);
+
   gtk_widget_grab_focus(GTK_WIDGET(view));
 }
 
@@ -120,6 +175,8 @@ static void my_application_shutdown(GApplication* application) {
 // Implements GObject::dispose.
 static void my_application_dispose(GObject* object) {
   MyApplication* self = MY_APPLICATION(object);
+  self->radio_player.reset();
+  g_clear_object(&self->channel);
   g_clear_pointer(&self->dart_entrypoint_arguments, g_strfreev);
   G_OBJECT_CLASS(my_application_parent_class)->dispose(object);
 }

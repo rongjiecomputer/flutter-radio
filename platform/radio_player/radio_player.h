@@ -8,10 +8,13 @@
 // Otherwise the default Windows Media Foundation backend is used.
 // ---------------------------------------------------------------------------
 
-#ifdef USE_BASS_BACKEND
+#if defined(USE_BASS_BACKEND) || !defined(_WIN32)
 // Forward-declare the BASS channel handle type so we can store it without
 // pulling the full bass.h into every translation unit that includes this header.
 using HSTREAM = unsigned long;
+#ifndef USE_BASS_BACKEND
+#define USE_BASS_BACKEND
+#endif
 #else
 #include <mfapi.h>
 #include <mfidl.h>

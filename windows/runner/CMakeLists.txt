@@ -21,9 +21,9 @@ option(USE_BASS_BACKEND "Use BASS audio library instead of Windows Media Foundat
 #
 # Any new source files that you add to the application should be added here.
 if(USE_BASS_BACKEND)
-  set(RADIO_PLAYER_SRC "radio_player_bass.cpp")
+  set(RADIO_PLAYER_SRC "../../platform/radio_player/radio_player_bass.cpp")
 else()
-  set(RADIO_PLAYER_SRC "radio_player.cpp")
+  set(RADIO_PLAYER_SRC "../../platform/radio_player/radio_player.cpp")
 endif()
 
 add_executable(${BINARY_NAME} WIN32
@@ -56,6 +56,7 @@ target_compile_definitions(${BINARY_NAME} PRIVATE "NOMINMAX")
 target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app)
 target_link_libraries(${BINARY_NAME} PRIVATE "dwmapi.lib")
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
+target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/../platform/radio_player")
 
 # ---------------------------------------------------------------------------
 # Backend-specific configuration
@@ -64,7 +65,7 @@ if(USE_BASS_BACKEND)
   # Propagate the macro so radio_player.h selects the right private members.
   target_compile_definitions(${BINARY_NAME} PRIVATE "USE_BASS_BACKEND")
 
-  set(BASS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../third_party/bass")
+  set(BASS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../third_party/bass")
 
   # Validate that the BASS directory and required files exist.
   if(NOT EXISTS "${BASS_DIR}/bass.h")
