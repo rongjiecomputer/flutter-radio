@@ -5,7 +5,7 @@
 #include <shlwapi.h>
 #include <windows.h>
 
-std::wstring stringToWstring(const std::string &str) {
+std::wstring stringToWstring(const std::string& str) {
   int size_needed =
       MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), NULL, 0);
   std::wstring wstr(size_needed, 0);
@@ -14,13 +14,13 @@ std::wstring stringToWstring(const std::string &str) {
   return wstr;
 }
 
-
 #pragma comment(lib, "mf.lib")
 #pragma comment(lib, "mfplat.lib")
 #pragma comment(lib, "mfuuid.lib")
 #pragma comment(lib, "shlwapi.lib")
 
-template <class T> void SafeRelease(T **ppT) {
+template <class T>
+void SafeRelease(T** ppT) {
   if (*ppT) {
     (*ppT)->Release();
     *ppT = nullptr;
@@ -40,7 +40,7 @@ RadioPlayer::~RadioPlayer() {
   MFShutdown();
 }
 
-void RadioPlayer::SetUrl(const std::string &url) {
+void RadioPlayer::SetUrl(const std::string& url) {
   std::wstring wurl = stringToWstring(url);
 
   SafeRelease(&m_pSource);
@@ -48,11 +48,11 @@ void RadioPlayer::SetUrl(const std::string &url) {
 
   MFCreateMediaSession(nullptr, &m_pSession);
 
-  IMFSourceResolver *pSourceResolver = nullptr;
+  IMFSourceResolver* pSourceResolver = nullptr;
   MFCreateSourceResolver(&pSourceResolver);
 
   MF_OBJECT_TYPE ObjectType = MF_OBJECT_INVALID;
-  IUnknown *pSource = nullptr;
+  IUnknown* pSource = nullptr;
 
   pSourceResolver->CreateObjectFromURL(wurl.c_str(), MF_RESOLUTION_MEDIASOURCE,
                                        nullptr, &ObjectType, &pSource);
@@ -66,10 +66,10 @@ void RadioPlayer::SetUrl(const std::string &url) {
 
   if (m_pSource && m_pSession) {
     // Create Topology
-    IMFTopology *pTopology = nullptr;
+    IMFTopology* pTopology = nullptr;
     MFCreateTopology(&pTopology);
 
-    IMFPresentationDescriptor *pPD = nullptr;
+    IMFPresentationDescriptor* pPD = nullptr;
     m_pSource->CreatePresentationDescriptor(&pPD);
 
     DWORD cStreams = 0;
@@ -77,20 +77,20 @@ void RadioPlayer::SetUrl(const std::string &url) {
 
     for (DWORD i = 0; i < cStreams; i++) {
       BOOL fSelected = FALSE;
-      IMFStreamDescriptor *pSD = nullptr;
+      IMFStreamDescriptor* pSD = nullptr;
       pPD->GetStreamDescriptorByIndex(i, &fSelected, &pSD);
 
       if (fSelected) {
-        IMFTopologyNode *pSourceNode = nullptr;
+        IMFTopologyNode* pSourceNode = nullptr;
         MFCreateTopologyNode(MF_TOPOLOGY_SOURCESTREAM_NODE, &pSourceNode);
         pSourceNode->SetUnknown(MF_TOPONODE_SOURCE, m_pSource);
         pSourceNode->SetUnknown(MF_TOPONODE_PRESENTATION_DESCRIPTOR, pPD);
         pSourceNode->SetUnknown(MF_TOPONODE_STREAM_DESCRIPTOR, pSD);
 
-        IMFTopologyNode *pOutputNode = nullptr;
+        IMFTopologyNode* pOutputNode = nullptr;
         MFCreateTopologyNode(MF_TOPOLOGY_OUTPUT_NODE, &pOutputNode);
 
-        IMFActivate *pRendererActivate = nullptr;
+        IMFActivate* pRendererActivate = nullptr;
         MFCreateAudioRendererActivate(&pRendererActivate);
         pOutputNode->SetObject(pRendererActivate);
 
@@ -130,7 +130,7 @@ void RadioPlayer::Stop() {
 
 void RadioPlayer::SetVolume(float level) {
   if (m_pSession) {
-    IMFSimpleAudioVolume *pVolume = nullptr;
+    IMFSimpleAudioVolume* pVolume = nullptr;
     MFGetService(m_pSession, MR_POLICY_VOLUME_SERVICE, IID_PPV_ARGS(&pVolume));
     if (pVolume) {
       pVolume->SetMasterVolume(level);
@@ -139,4 +139,4 @@ void RadioPlayer::SetVolume(float level) {
   }
 }
 
-} // namespace flutter_radio
+}  // namespace flutter_radio

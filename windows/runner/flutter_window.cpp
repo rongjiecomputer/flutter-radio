@@ -25,9 +25,7 @@ bool FlutterWindow::OnCreate() {
   RegisterPlugins(flutter_controller_->engine());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
-  flutter_controller_->engine()->SetNextFrameCallback([&]() {
-    this->Show();
-  });
+  flutter_controller_->engine()->SetNextFrameCallback([&]() { this->Show(); });
 
   // Initialize RadioPlayer
   radio_player_ = std::make_unique<flutter_radio::RadioPlayer>();
@@ -82,7 +80,8 @@ void FlutterWindow::OnDestroy() {
 }
 
 LRESULT
-FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
+FlutterWindow::MessageHandler(HWND hwnd,
+                              UINT const message,
                               WPARAM const wparam,
                               LPARAM const lparam) noexcept {
   // Give Flutter, including plugins, an opportunity to handle window messages.
