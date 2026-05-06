@@ -1,0 +1,14 @@
+{
+    "windows": {
+        "url": "https://www.un4seen.com/files/bass24.zip",
+        "sha256": "3a03ec9a33d0f4f9d167660da51c8bb1432e8977496995455ab137277d69636e"
+    },
+    "linux": {
+        "url": "https://www.un4seen.com/files/bass24-linux.zip",
+        "sha256": "9bf723dbf750d665c14cfc099f96a056483dc35de6850d2df76af8b640435ca9"
+    },
+    "macos": {
+        "url": "https://www.un4seen.com/files/bass24-osx.zip",
+        "sha256": "dfadd6238896b02b144b2870655fb9ee2445fc84d5c00f7e1c56faf9343ce59c"
+    }
+}
