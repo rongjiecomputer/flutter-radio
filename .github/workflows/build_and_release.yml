@@ -1,0 +1,105 @@
+name: Build and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release Tag (e.g., v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+      release_name:
+        description: 'Release Name'
+        required: false
+        default: 'Release v1.0.0'
+
+jobs:
+  build:
+    name: Build for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            output_name: flutter_radio-linux-x64.tar.gz
+          - os: windows-latest
+            platform: windows
+            output_name: flutter_radio-windows-x64.zip
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version-file: pubspec.yaml
+          cache: true
+
+      - name: Install Linux dependencies
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+
+      - name: Download BASS dependencies
+        run: |
+          python manage_bass.py download
+
+      - name: Build (Linux)
+        if: matrix.platform == 'linux'
+        run: |
+          flutter build linux --release
+          # Ensure lib directory exists in the bundle
+          mkdir -p build/linux/x64/release/bundle/lib
+          # Copy libbass.so to the bundle's lib directory
+          cp third_party/bass/libbass.so build/linux/x64/release/bundle/lib/
+          # Package the bundle
+          cd build/linux/x64/release/bundle
+          tar -czf ../../../../../${{ matrix.output_name }} .
+
+      - name: Build (Windows)
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          # Enable BASS backend in CMake
+          (Get-Content windows/runner/CMakeLists.txt) -replace 'option\(USE_BASS_BACKEND ".*" OFF\)', 'option(USE_BASS_BACKEND "Use BASS" ON)' | Set-Content windows/runner/CMakeLists.txt
+          # Build
+          flutter build windows --release
+          # Package the release files
+          Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath ${{ matrix.output_name }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform }}-artifact
+          path: ${{ matrix.output_name }}
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.event.inputs.tag_name }}
+          name: ${{ github.event.inputs.release_name || github.event.inputs.tag_name }}
+          files: artifacts/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
