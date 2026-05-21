@@ -174,11 +174,11 @@ def download_deps():
                 else:
                     extract_and_move("bass.dll") # Should find root one
                     extract_and_move("bass.lib", "c")
-            
+
             elif os_name == "linux":
-                arch_folder = "x64" if arch == "x64" else ("aarch64" if arch == "arm64" else "armhf")
-                extract_and_move("libbass.so", arch_folder)
-            
+                arch_folder = "x86_64" if arch == "x64" else ("aarch64" if arch == "arm64" else "armhf")
+                extract_and_move("libbass.so", "libs/" + arch_folder)
+
             elif os_name == "macos":
                 extract_and_move("libbass.dylib")
 
