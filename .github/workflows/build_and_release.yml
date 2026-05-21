@@ -55,10 +55,6 @@ jobs:
         if: matrix.platform == 'linux'
         run: |
           flutter build linux --release
-          # Ensure lib directory exists in the bundle
-          mkdir -p build/linux/x64/release/bundle/lib
-          # Copy libbass.so to the bundle's lib directory
-          cp third_party/bass/libbass.so build/linux/x64/release/bundle/lib/
           # Package the bundle
           cd build/linux/x64/release/bundle
           tar -czf ../../../../../${{ matrix.output_name }} .

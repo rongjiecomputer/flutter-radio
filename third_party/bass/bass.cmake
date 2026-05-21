@@ -17,6 +17,7 @@ elseif(APPLE)
 else()
     set_target_properties(bass PROPERTIES
         IMPORTED_LOCATION "${CMAKE_CURRENT_LIST_DIR}/libbass.so"
+        IMPORTED_NO_SONAME TRUE
     )
 endif()
 

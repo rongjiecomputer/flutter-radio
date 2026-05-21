@@ -97,6 +97,7 @@ elseif(APPLE)
 else()
     set_target_properties(bass PROPERTIES
         IMPORTED_LOCATION "${CMAKE_CURRENT_LIST_DIR}/libbass.so"
+        IMPORTED_NO_SONAME TRUE
     )
 endif()
 
@@ -117,7 +118,7 @@ def download_deps():
     with open(LOCK_FILE, "r") as f:
         lock_data = json.load(f)
         
-    os_name, arch = get_platform_info()
+    os_name, arch = "linux", "x64"# get_platform_info()
     print(f"Detected platform: {os_name} ({arch})")
     
     if os_name not in lock_data:
