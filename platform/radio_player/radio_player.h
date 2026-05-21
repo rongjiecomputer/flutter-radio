@@ -11,7 +11,12 @@
 #if defined(USE_BASS_BACKEND) || !defined(_WIN32)
 // Forward-declare the BASS channel handle type so we can store it without
 // pulling the full bass.h into every translation unit that includes this header.
+#ifdef _WIN32
 using HSTREAM = unsigned long;
+#else
+#include <stdint.h>
+using HSTREAM = uint32_t;
+#endif
 #ifndef USE_BASS_BACKEND
 #define USE_BASS_BACKEND
 #endif

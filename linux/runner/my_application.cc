@@ -106,9 +106,9 @@ static void my_application_activate(GApplication* application) {
           self->radio_player->Stop();
           fl_method_call_respond_success(method_call, nullptr, nullptr);
         } else if (strcmp(method, "setVolume") == 0) {
-          if (fl_value_get_type(args) == FL_VALUE_TYPE_FLOAT64) {
+          if (fl_value_get_type(args) == FL_VALUE_TYPE_FLOAT) {
             self->radio_player->SetVolume(
-                static_cast<float>(fl_value_get_float64(args)));
+                static_cast<float>(fl_value_get_float(args)));
             fl_method_call_respond_success(method_call, nullptr, nullptr);
           } else {
             fl_method_call_respond_error(method_call, "INVALID_ARGUMENT",
