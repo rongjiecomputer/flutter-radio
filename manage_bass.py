@@ -77,6 +77,37 @@ def lock_deps():
         json.dump(lock_data, f, indent=4)
     print(f"Successfully wrote {LOCK_FILE}")
 
+CMAKE_BASS_FILE = """
+# BASS Audio Library Import
+add_library(bass SHARED IMPORTED)
+
+set_target_properties(bass PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_LIST_DIR}"
+)
+
+if(WIN32)
+    set_target_properties(bass PROPERTIES
+        IMPORTED_IMPLIB "${CMAKE_CURRENT_LIST_DIR}/bass.lib"
+        IMPORTED_LOCATION "${CMAKE_CURRENT_LIST_DIR}/bass.dll"
+    )
+elseif(APPLE)
+    set_target_properties(bass PROPERTIES
+        IMPORTED_LOCATION "${CMAKE_CURRENT_LIST_DIR}/libbass.dylib"
+    )
+else()
+    set_target_properties(bass PROPERTIES
+        IMPORTED_LOCATION "${CMAKE_CURRENT_LIST_DIR}/libbass.so"
+    )
+endif()
+
+add_library(BASS::BASS ALIAS bass)
+"""
+
+def write_cmake_file():
+    os.makedirs(TARGET_DIR, exist_ok=True)
+    with open(os.path.join(TARGET_DIR, "bass.cmake"), "w") as f:
+        f.write(CMAKE_BASS_FILE)
+
 def download_deps():
     """Download, verify, and extract BASS library for the current platform."""
     if not os.path.exists(LOCK_FILE):
@@ -153,6 +184,8 @@ def download_deps():
 
             # Always try to extract the header
             extract_and_move("bass.h")
+
+    write_cmake_file()
 
     print("Dependencies downloaded and extracted successfully.")
 

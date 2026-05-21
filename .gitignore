@@ -50,5 +50,6 @@ app.*.map.json
 /third_party/bass/*.dll
 /third_party/bass/*.so
 /third_party/bass/*.dylib
+/third_party/bass/bass.cmake
 
 .clangd
