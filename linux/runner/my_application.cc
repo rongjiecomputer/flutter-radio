@@ -155,12 +155,30 @@ static gboolean my_application_local_command_line(GApplication* application,
   return TRUE;
 }
 
+// Sets the GTK default window icon from the bundled radio.png. The bundle
+// layout is <exe-dir>/data/radio.png, mirroring how Flutter installs other
+// data files (icudtl.dat, flutter_assets). Failures are non-fatal — the app
+// just falls back to the default window icon.
+static void set_default_window_icon() {
+  g_autofree gchar* exe_path = g_file_read_link("/proc/self/exe", nullptr);
+  if (!exe_path) return;
+  g_autofree gchar* exe_dir = g_path_get_dirname(exe_path);
+  g_autofree gchar* icon_path =
+      g_build_filename(exe_dir, "data", "radio.png", nullptr);
+  g_autoptr(GError) error = nullptr;
+  if (!gtk_window_set_default_icon_from_file(icon_path, &error)) {
+    g_warning("Failed to load app icon %s: %s", icon_path, error->message);
+  }
+}
+
 // Implements GApplication::startup.
 static void my_application_startup(GApplication* application) {
   // MyApplication* self = MY_APPLICATION(object);
 
   // Initialise GStreamer once before any RadioPlayer is constructed.
   gst_init(nullptr, nullptr);
+
+  set_default_window_icon();
 
   G_APPLICATION_CLASS(my_application_parent_class)->startup(application);
 }
