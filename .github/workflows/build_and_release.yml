@@ -25,6 +25,9 @@ jobs:
           - os: windows-latest
             platform: windows
             output_name: flutter_radio-windows-x64.zip
+          - os: macos-latest
+            platform: macos
+            output_name: flutter_radio-macos-arm64.zip
 
     steps:
       - name: Checkout code
@@ -63,6 +66,17 @@ jobs:
           flutter build windows --release
           # Package the release files
           Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath ${{ matrix.output_name }}
+
+      - name: Build (macOS)
+        if: matrix.platform == 'macos'
+        env:
+          CODE_SIGN_IDENTITY: ""
+          CODE_SIGNING_REQUIRED: "NO"
+          CODE_SIGNING_ALLOWED: "NO"
+        run: |
+          flutter build macos --release
+          cd "build/macos/Build/Products/Release"
+          zip -r "../../../../${{ matrix.output_name }}" "flutter_radio.app"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
