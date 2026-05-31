@@ -10,6 +10,8 @@ class MainFlutterWindow: NSWindow {
     self.setFrame(frame, display: true)
 
     RegisterGeneratedPlugins(registry: flutterViewController)
+    RadioPlayerChannel.register(
+      with: flutterViewController.engine.binaryMessenger)
 
     super.awakeFromNib()
   }

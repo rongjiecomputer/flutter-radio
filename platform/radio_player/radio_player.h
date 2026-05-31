@@ -1,28 +1,13 @@
 #pragma once
 #include <string>
 
-// ---------------------------------------------------------------------------
-// Backend selection
-// The CMake build system sets USE_BASS_BACKEND when configured with
-//   -DUSE_BASS_BACKEND=ON
-// Otherwise the default Windows Media Foundation backend is used.
-// ---------------------------------------------------------------------------
-
-#if defined(USE_BASS_BACKEND) || !defined(_WIN32)
-// Forward-declare the BASS channel handle type so we can store it without
-// pulling the full bass.h into every translation unit that includes this header.
 #ifdef _WIN32
-using HSTREAM = unsigned long;
-#else
-#include <stdint.h>
-using HSTREAM = uint32_t;
-#endif
-#ifndef USE_BASS_BACKEND
-#define USE_BASS_BACKEND
-#endif
-#else
 #include <mfapi.h>
 #include <mfidl.h>
+#else
+// Forward-declare to avoid pulling all of <gst/gst.h> into translation units
+// that only consume the RadioPlayer interface.
+typedef struct _GstElement GstElement;
 #endif
 
 namespace flutter_radio {
@@ -32,17 +17,25 @@ class RadioPlayer {
   RadioPlayer();
   ~RadioPlayer();
 
+  RadioPlayer(const RadioPlayer&) = delete;
+  RadioPlayer& operator=(const RadioPlayer&) = delete;
+
   void SetUrl(const std::string& url);
   void Play();
   void Stop();
   void SetVolume(float level);
 
  private:
-#ifdef USE_BASS_BACKEND
-  HSTREAM m_channel;
-#else
+#ifdef _WIN32
+  void ApplyPendingVolume();
   IMFMediaSession* m_pSession;
   IMFMediaSource* m_pSource;
+  float m_pendingVolume;
+  bool  m_volumeIsPending;
+#else
+  GstElement* pipeline_;
+  double pending_volume_;
+  bool volume_is_pending_;
 #endif
 };
 

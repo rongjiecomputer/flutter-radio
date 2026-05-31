@@ -41,15 +41,12 @@ jobs:
         if: matrix.platform == 'linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
-
-      - uses: actions/setup-python@v6
-        with:
-          python-version: '3.14'
-
-      - name: Download BASS dependencies
-        run: |
-          python manage_bass.py download
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev \
+            libgstreamer1.0-dev \
+            gstreamer1.0-plugins-base \
+            gstreamer1.0-plugins-good \
+            gstreamer1.0-plugins-bad \
+            gstreamer1.0-libav
 
       - name: Build (Linux)
         if: matrix.platform == 'linux'
@@ -63,9 +60,6 @@ jobs:
         if: matrix.platform == 'windows'
         shell: pwsh
         run: |
-          # Enable BASS backend in CMake
-          (Get-Content windows/runner/CMakeLists.txt) -replace 'option\(USE_BASS_BACKEND ".*" OFF\)', 'option(USE_BASS_BACKEND "Use BASS" ON)' | Set-Content windows/runner/CMakeLists.txt
-          # Build
           flutter build windows --release
           # Package the release files
           Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath ${{ matrix.output_name }}

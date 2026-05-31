@@ -29,7 +29,11 @@ void SafeRelease(T** ppT) {
 
 namespace flutter_radio {
 
-RadioPlayer::RadioPlayer() : m_pSession(nullptr), m_pSource(nullptr) {
+RadioPlayer::RadioPlayer()
+    : m_pSession(nullptr),
+      m_pSource(nullptr),
+      m_pendingVolume(1.0f),
+      m_volumeIsPending(false) {
   MFStartup(MF_VERSION);
 }
 
@@ -118,6 +122,7 @@ void RadioPlayer::Play() {
     PropVariantInit(&varStart);
     m_pSession->Start(&GUID_NULL, &varStart);
     PropVariantClear(&varStart);
+    ApplyPendingVolume();
   }
 }
 
@@ -129,13 +134,27 @@ void RadioPlayer::Stop() {
 }
 
 void RadioPlayer::SetVolume(float level) {
-  if (m_pSession) {
-    IMFSimpleAudioVolume* pVolume = nullptr;
-    MFGetService(m_pSession, MR_POLICY_VOLUME_SERVICE, IID_PPV_ARGS(&pVolume));
-    if (pVolume) {
-      pVolume->SetMasterVolume(level);
-      pVolume->Release();
-    }
+  if (!m_pSession) {
+    m_pendingVolume = level;
+    m_volumeIsPending = true;
+    return;
+  }
+  IMFSimpleAudioVolume* pVolume = nullptr;
+  MFGetService(m_pSession, MR_POLICY_VOLUME_SERVICE, IID_PPV_ARGS(&pVolume));
+  if (pVolume) {
+    pVolume->SetMasterVolume(level);
+    pVolume->Release();
+  }
+}
+
+void RadioPlayer::ApplyPendingVolume() {
+  if (!m_volumeIsPending || !m_pSession) return;
+  IMFSimpleAudioVolume* pVolume = nullptr;
+  MFGetService(m_pSession, MR_POLICY_VOLUME_SERVICE, IID_PPV_ARGS(&pVolume));
+  if (pVolume) {
+    pVolume->SetMasterVolume(m_pendingVolume);
+    pVolume->Release();
+    m_volumeIsPending = false;
   }
 }
 
